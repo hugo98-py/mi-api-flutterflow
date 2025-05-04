@@ -179,8 +179,8 @@ import os
 app = FastAPI()
 
 # Cambiar al path de trabajo
-path = r'C:\Users\Hugo\OneDrive - AMS CONSULTORES SPA\Documentos\AMS\Proyectos\AMS App\fastapi'
-os.chdir(path)
+#path = r'C:\Users\Hugo\OneDrive - AMS CONSULTORES SPA\Documentos\AMS\Proyectos\AMS App\fastapi'
+#os.chdir(path)
 
 # Asegurar que existe la carpeta static
 os.makedirs("static", exist_ok=True)
