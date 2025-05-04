@@ -153,16 +153,73 @@ Created on Sat Apr 19 19:37:45 2025
 # def home():
 #     return {"message": "Hola desde FastAPI + Ngrok"}
 
+#from fastapi import FastAPI
+#from pydantic import BaseModel
+
+#app = FastAPI()
+
+#class Datos(BaseModel):
+#    nombre: str
+#    edad: int
+
+#@app.post("/crear")
+#def crear_dato(data: Datos):
+#    return {"mensaje": f"Hola {data.nombre}, tienes {data.edad} años."}
+
+# Este es el codigo adaptado para generar un link de descarga con Post en FastAPI. (4 de mayo de 2025)
+# pip install fastapi uvicorn openpyxl python-multipart
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from openpyxl import load_workbook
+import uuid
+import os
 
 app = FastAPI()
 
-class Datos(BaseModel):
-    nombre: str
-    edad: int
+# Cambiar al path de trabajo
+path = r'C:\Users\Hugo\OneDrive - AMS CONSULTORES SPA\Documentos\AMS\Proyectos\AMS App\fastapi'
+os.chdir(path)
 
-@app.post("/crear")
-def crear_dato(data: Datos):
-    return {"mensaje": f"Hola {data.nombre}, tienes {data.edad} años."}
+# Asegurar que existe la carpeta static
+os.makedirs("static", exist_ok=True)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Modelo para la solicitud
+class DatosEntrada(BaseModel):
+    nombre: str = "Sin nombre"
+    edad: int | str = "N/A"
+
+@app.post("/generar-excel/")
+async def generar_excel(data: DatosEntrada):
+    # Extraer datos
+    nombre = data.nombre
+    edad = data.edad
+
+    # Cargar plantilla
+    plantilla_path = "plantilla.xlsx"
+    wb = load_workbook(plantilla_path)
+    ws = wb.active
+
+    # Escribir datos en la hoja
+    ws["A1"] = "Nombre"
+    ws["B1"] = "Edad"
+    ws["A2"] = nombre
+    ws["B2"] = edad
+
+    # Generar archivo único
+    archivo_id = str(uuid.uuid4())
+    nombre_archivo = f"{archivo_id}.xlsx"
+    ruta_guardado = os.path.join("static", nombre_archivo)
+    wb.save(ruta_guardado)
+
+    # URL de descarga
+    url_descarga = f"http://localhost:8000/static/{nombre_archivo}"  # o cambia a tu dominio real en Render
+
+    return JSONResponse({
+        "message": "Archivo generado con éxito",
+        "download_url": url_descarga
+    })
+
 
