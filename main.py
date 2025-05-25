@@ -17,7 +17,7 @@ async def convert_excel_to_json():
     """
     Lee un archivo Excel del servidor, lo convierte a JSON y lo retorna.
     """
-    ruta_excel = "C:/Users/Hugo/OneDrive - AMS CONSULTORES SPA/Documentos/AMS/Proyectos/AMS App/fastapi/plantilla_BD.xlsx"  # Asegúrate de que esté en la misma carpeta o da la ruta completa
+    ruta_excel = "plantilla_BD.xlsx"  # Asegúrate de que esté en la misma carpeta o da la ruta completa
 
     try:
         df = pd.read_excel(ruta_excel, engine='openpyxl')
