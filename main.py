@@ -4,43 +4,39 @@ Created on Sat Apr 19 19:37:45 2025
 
 @author: Hugo
 """
+""" Este codigo lo uso para hacer la primera prueba de convert JSON to Data Type en FF. Para esto
+necesito una API cualquiera que me entregue un JSON cualquiera para simplemente usar en la conversion
+de JSON to Data Type"""
+
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from openpyxl import load_workbook
-import uuid
-import os
+from typing import List
 
 app = FastAPI()
 
-# Modelo de entrada
-class DatosEntrada(BaseModel):
-    nombre: str = "Sin nombre"
-    edad: int | str = "N/A"
+class Row(BaseModel):
+    column1: str
+    column2: int
+    column3: float
 
-@app.post("/generar-excel/")
-async def generar_excel(data: DatosEntrada):
-    nombre = data.nombre
-    edad = data.edad
+class Table(BaseModel):
+    data: List[Row]
 
-    # Cargar plantilla
-    plantilla_path = "plantilla.xlsx"
-    wb = load_workbook(plantilla_path)
-    ws = wb.active
+# Predefined dummy data: 3 columns, 5 rows
+dummy_data = Table(data=[
+    Row(column1="A", column2=10, column3=1.1),
+    Row(column1="B", column2=20, column3=2.2),
+    Row(column1="C", column2=30, column3=3.3),
+    Row(column1="D", column2=40, column3=4.4),
+    Row(column1="E", column2=50, column3=5.5),
+])
 
-    # Escribir los datos
-    ws["A1"] = "Nombre"
-    ws["B1"] = "Edad"
-    ws["A2"] = nombre
-    ws["B2"] = edad
+@app.get("/dummy", response_model=Table)
+async def get_dummy_data():
+    """
+    Devuelve un JSON con 3 columnas y 5 filas de datos de ejemplo.
+    """
+    return dummy_data
 
-    # Guardar el archivo temporalmente
-    archivo_temp = f"{uuid.uuid4()}.xlsx"
-    wb.save(archivo_temp)
-
-    # Devolverlo como archivo descargable
-    return FileResponse(
-        archivo_temp,
-        filename="reporte.xlsx",
-        media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    )
+# Para ejecutar:
+# uvicorn main:app --reload
