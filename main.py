@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sat Apr 19 19:37:45 2025
+"""
 
 @author: Hugo
 """ En este codigo se usa una versiona mas avanzada que la anterior, en donde se importa el archivo ecxel 
