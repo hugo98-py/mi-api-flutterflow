@@ -15,10 +15,6 @@ app = FastAPI()
 
 @app.get("/convert-excel-to-json/")
 async def convert_excel_to_json():
-    """
-    Lee un archivo Excel del servidor, lo convierte a JSON y lo retorna.
-    """
-    
     cwd = os.getcwd()
     os.chdir(cwd)
     ruta_excel = "plantilla_BD.xlsx"  # Asegúrate de que esté en la misma carpeta o da la ruta completa
