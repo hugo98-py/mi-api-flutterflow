@@ -9,6 +9,7 @@ con las BD de pruebas y se exporta el JSON con GET. """
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 import pandas as pd
+import os 
 
 app = FastAPI()
 
@@ -17,6 +18,9 @@ async def convert_excel_to_json():
     """
     Lee un archivo Excel del servidor, lo convierte a JSON y lo retorna.
     """
+    
+    cwd = os.getcwd()
+    os.chdir(cwd)
     ruta_excel = "plantilla_BD.xlsx"  # Asegúrate de que esté en la misma carpeta o da la ruta completa
 
     try:
