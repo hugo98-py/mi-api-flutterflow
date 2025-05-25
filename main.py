@@ -3,40 +3,25 @@
 Created on Sat Apr 19 19:37:45 2025
 
 @author: Hugo
-"""
-""" Este codigo lo uso para hacer la primera prueba de convert JSON to Data Type en FF. Para esto
-necesito una API cualquiera que me entregue un JSON cualquiera para simplemente usar en la conversion
-de JSON to Data Type"""
+""" En este codigo se usa una versiona mas avanzada que la anterior, en donde se importa el archivo ecxel 
+con las BD de pruebas y se exporta el JSON con GET. """
 
 from fastapi import FastAPI
-from pydantic import BaseModel
-from typing import List
+from fastapi.responses import JSONResponse
+import pandas as pd
 
 app = FastAPI()
 
-class Row(BaseModel):
-    column1: str
-    column2: int
-    column3: float
-
-class Table(BaseModel):
-    data: List[Row]
-
-# Predefined dummy data: 3 columns, 5 rows
-dummy_data = Table(data=[
-    Row(column1="A", column2=10, column3=1.1),
-    Row(column1="B", column2=20, column3=2.2),
-    Row(column1="C", column2=30, column3=3.3),
-    Row(column1="D", column2=40, column3=4.4),
-    Row(column1="E", column2=50, column3=5.5),
-])
-
-@app.get("/dummy", response_model=Table)
-async def get_dummy_data():
+@app.get("/convert-excel-to-json/")
+async def convert_excel_to_json():
     """
-    Devuelve un JSON con 3 columnas y 5 filas de datos de ejemplo.
+    Lee un archivo Excel del servidor, lo convierte a JSON y lo retorna.
     """
-    return dummy_data
+    ruta_excel = "C:/Users/Hugo/OneDrive - AMS CONSULTORES SPA/Documentos/AMS/Proyectos/AMS App/fastapi/plantilla_BD.xlsx"  # Asegúrate de que esté en la misma carpeta o da la ruta completa
 
-# Para ejecutar:
-# uvicorn main:app --reload
+    try:
+        df = pd.read_excel(ruta_excel, engine='openpyxl')
+        datos_json = df.to_dict(orient='records')
+        return JSONResponse(content=datos_json)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
