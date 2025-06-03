@@ -17,7 +17,7 @@ app = FastAPI()
 async def convert_excel_to_json():
     cwd = os.getcwd()
     os.chdir(cwd)
-    ruta_excel = "plantilla_BD.xlsx"  # Asegúrate de que esté en la misma carpeta o da la ruta completa
+    ruta_excel = "BD_FV_copia.xlsx"  
 
     try:
         df = pd.read_excel(ruta_excel, engine='openpyxl')
