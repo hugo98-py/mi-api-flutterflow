@@ -21,7 +21,8 @@ async def convert_excel_to_json():
 
     try:
         df = pd.read_excel(ruta_excel, engine='openpyxl')
-        datos_json = df.to_dict(orient='records')
+        df_clean = df.where(pd.notnull(df), None)  # <--- esta línea soluciona tu error
+        datos_json = df_clean.to_dict(orient='records')
         return JSONResponse(content=datos_json)
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
