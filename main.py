@@ -40,14 +40,9 @@ def sanitizar_nombre(campo) -> str | None:
     if not isinstance(campo, str):
         return None
     s = quitar_tildes(campo).strip()
-    # 1) cualquier no-alfa-numérico (incl. espacio y punto) → "_"
-    s = re.sub(r"[^\w]", "_", s, flags=re.ASCII)   # \w = [A-Za-z0-9_]
-    # 2) colapsar múltiples "_" → "_"
-    s = re.sub(r"_+", "_", s)
-    # 3) quitar "_" al inicio/fin
-    s = s.strip("_")
-    # (opcional) forzar minúsculas:
-    # s = s.lower()
+    s = re.sub(r"[^\w]", "_", s, flags=re.ASCII)  # no alfanumérico → "_"
+    s = re.sub(r"_+", "_", s)                     # colapsar "__" → "_"
+    s = s.strip("_")                              # quitar "_" extremos
     return s or None
 
 # ──────────────────────────────── ENDPOINT ───────────────────────────────────
@@ -73,15 +68,21 @@ async def convert_excel_to_json(
 
         # 2) Limpiar nombres de columnas (sin dobles guiones bajos)
         cols = [sanitizar_nombre(c) for c in df.columns]
-
         if len(set(filter(None, cols))) != len(list(filter(None, cols))):
             raise RuntimeError("Columnas duplicadas tras la limpieza.")
-
         df.columns = cols
         df = df.loc[:, [c for c in df.columns if c]]  # descarta vacías
 
-        # 3) NaN → None y a JSON
-        datos = df.where(pd.notnull(df), None).to_dict(orient="records")
+        # 3) Normalizar vacíos → "-" y a JSON (evita null en FF)
+        #    - Reemplaza strings vacíos o solo espacios por "-"
+        #    - Reemplaza NaN/None/NaT por "-"
+        df = df.replace(r"^\s*$", "-", regex=True)    # "" -> "-"
+        df = df.astype(object).where(pd.notnull(df), "-")
+
+        # (opcional) Si en FF todos los campos son String:
+        # df = df.astype(str)
+
+        datos = df.to_dict(orient="records")
         return JSONResponse(content=datos)
 
     except Exception:
