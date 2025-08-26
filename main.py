@@ -4,7 +4,7 @@ Excel-to-JSON API 100 % FlutterFlow-Friendly
 """
 from pathlib import Path
 from typing import Literal
-import logging, unicodedata, pandas as pd
+import logging, unicodedata, re, pandas as pd
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import JSONResponse
@@ -35,6 +35,21 @@ def quitar_tildes(texto: str) -> str:
             .encode("ASCII", "ignore")
             .decode("utf-8")) if isinstance(texto, str) else texto
 
+# ───────────── util: sanitizar nombres de columnas (sin __ dobles) ───────────
+def sanitizar_nombre(campo) -> str | None:
+    if not isinstance(campo, str):
+        return None
+    s = quitar_tildes(campo).strip()
+    # 1) cualquier no-alfa-numérico (incl. espacio y punto) → "_"
+    s = re.sub(r"[^\w]", "_", s, flags=re.ASCII)   # \w = [A-Za-z0-9_]
+    # 2) colapsar múltiples "_" → "_"
+    s = re.sub(r"_+", "_", s)
+    # 3) quitar "_" al inicio/fin
+    s = s.strip("_")
+    # (opcional) forzar minúsculas:
+    # s = s.lower()
+    return s or None
+
 # ──────────────────────────────── ENDPOINT ───────────────────────────────────
 @app.get(
     "/convert-excel-to-json",
@@ -56,20 +71,8 @@ async def convert_excel_to_json(
         df = await run_in_threadpool(pd.read_excel, ruta_excel, engine="openpyxl")
         df = await run_in_threadpool(df.applymap, quitar_tildes)
 
-        # 2) Limpiar nombres de columnas
-        #    - Quita tildes
-        #    - trim()
-        #    - espacios → '_'
-        #    - PUNTOS → '_'  ← ★ NUEVO
-        cols = [
-            (
-                quitar_tildes(c).strip()
-                .replace(" ", "_")
-                .replace(".", "_")  # ★ NUEVO: reemplaza '.' por '_'
-                if isinstance(c, str) else None
-            )
-            for c in df.columns
-        ]
+        # 2) Limpiar nombres de columnas (sin dobles guiones bajos)
+        cols = [sanitizar_nombre(c) for c in df.columns]
 
         if len(set(filter(None, cols))) != len(list(filter(None, cols))):
             raise RuntimeError("Columnas duplicadas tras la limpieza.")
@@ -84,5 +87,6 @@ async def convert_excel_to_json(
     except Exception:
         logging.exception("Error procesando %s", ruta_excel)
         raise HTTPException(500, "Error interno procesando el archivo.")
+
 
 
