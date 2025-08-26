@@ -57,10 +57,20 @@ async def convert_excel_to_json(
         df = await run_in_threadpool(df.applymap, quitar_tildes)
 
         # 2) Limpiar nombres de columnas
+        #    - Quita tildes
+        #    - trim()
+        #    - espacios → '_'
+        #    - PUNTOS → '_'  ← ★ NUEVO
         cols = [
-            (quitar_tildes(c).strip().replace(" ", "_") if isinstance(c, str) else None)
+            (
+                quitar_tildes(c).strip()
+                .replace(" ", "_")
+                .replace(".", "_")  # ★ NUEVO: reemplaza '.' por '_'
+                if isinstance(c, str) else None
+            )
             for c in df.columns
         ]
+
         if len(set(filter(None, cols))) != len(list(filter(None, cols))):
             raise RuntimeError("Columnas duplicadas tras la limpieza.")
 
@@ -74,4 +84,5 @@ async def convert_excel_to_json(
     except Exception:
         logging.exception("Error procesando %s", ruta_excel)
         raise HTTPException(500, "Error interno procesando el archivo.")
+
 
